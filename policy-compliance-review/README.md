@@ -48,6 +48,16 @@
 
 运行方式见 [`reader-demo/README.md`](./reader-demo/README.md)。
 
+**单文件视图**：左侧渲染制度正文并标出修订位置，右侧以卡片展示问题描述、修订依据与修订建议，点击卡片即可定位到原文对应位置。
+
+![审核结果卡片与问题定位](./reader-demo/screenshots/01-audit-result-cards.png)
+
+**对比视图**：左右分列修订前后内容，右侧按「全部／新增／删除／修改」分类列出差异，支持同步滚动。
+
+![修订对比视图](./reader-demo/screenshots/02-revision-diff-view.png)
+
+> 为保护客户信息，截图中制度正文与审核意见均已做模糊处理。
+
 ### 制度审核技能包
 
 `skill-pack/` 是这个项目的核心，由 5 个可被智能体直接调用的技能组成，覆盖「法规检索 → 制度结构化 → 审核 → 人工确认 → 修订批注」全链路，包含文档解析、本地法规库检索、引用核验、规则基线与报告生成脚本。详见表内的独立说明：[`skill-pack/README.md`](./skill-pack/README.md)。
