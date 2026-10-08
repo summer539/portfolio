@@ -1,0 +1,6 @@
+# china-law-search 依赖说明
+# 核心查询功能零第三方依赖（仅 Python 标准库 urllib/json/re）。
+# 可选依赖（按需安装）：
+openpyxl>=3.0
+# 国家规章库 gov.cn 访问密钥刷新需要 playwright-cli（npm 包），
+# 由 lib/gov_api.py 首次使用时自动检测并安装，无需手动处理。

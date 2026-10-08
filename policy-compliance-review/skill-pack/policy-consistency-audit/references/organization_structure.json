@@ -1,0 +1,43 @@
+{
+  "organization": "某集团有限公司",
+  "source": "示例模板：真实客户组织架构未公开",
+  "updated_on": "2026-08-27",
+  "headquarters_departments": [
+    {"name": "综合部", "aliases": ["党委办公室", "董事会办公室"], "children": ["宣传中心"]},
+    {"name": "战略发展部", "aliases": [], "children": []},
+    {"name": "法律合规部", "aliases": [], "children": []},
+    {"name": "财务部", "aliases": [], "children": ["财务共享中心"]},
+    {"name": "人力资源部", "aliases": ["党委组织部"], "children": []},
+    {"name": "业务管理部", "aliases": [], "children": []},
+    {"name": "运营维护部", "aliases": [], "children": ["运营中心"]},
+    {"name": "质量安全部", "aliases": ["品牌管理部"], "children": []},
+    {"name": "科技创新部", "aliases": [], "children": []},
+    {"name": "审计部", "aliases": [], "children": ["区域审计分部"]},
+    {"name": "党群工作部", "aliases": ["党委宣传部"], "children": []},
+    {"name": "工会", "aliases": [], "children": []},
+    {"name": "纪委", "aliases": [], "children": []},
+    {"name": "巡视办公室", "aliases": [], "children": []},
+    {"name": "采购管理部", "aliases": [], "children": []},
+    {"name": "信息化管理部", "aliases": [], "children": []}
+  ],
+  "direct_units": [
+    {"name": "集团党校", "aliases": ["人才发展中心"], "children": [], "outside_beijing": true},
+    {"name": "技术研究院", "aliases": [], "children": [], "outside_beijing": true},
+    {"name": "创新中心", "aliases": [], "children": [], "outside_beijing": true}
+  ],
+  "branches": [
+    {"name": "省级分公司", "aliases": ["省分公司"], "children": ["地市级分公司"]}
+  ],
+  "subsidiaries": {
+    "wholly_owned": [
+      {"name": "某专业子公司", "aliases": ["行业拓展部"]}
+    ],
+    "controlled": [
+      {"name": "某境外子公司", "aliases": []}
+    ],
+    "associate": [
+      {"name": "某参股公司", "aliases": []}
+    ]
+  },
+  "generic_governance_bodies": ["董事会", "董事会审计委员会", "审计委员会", "党委", "经理层"]
+}

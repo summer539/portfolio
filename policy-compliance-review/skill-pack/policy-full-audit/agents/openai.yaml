@@ -1,0 +1,4 @@
+interface:
+  display_name: "制度完整性与规范性审核"
+  short_description: "按企业规则快速审核制度正文命名、关键格式、必要章节和类型化必备条款"
+  default_prompt: "使用 $policy-full-audit 对提供的 DOCX 制度文件执行完整性与规范性审核，并输出 Markdown 报告和机器可读 JSON。"

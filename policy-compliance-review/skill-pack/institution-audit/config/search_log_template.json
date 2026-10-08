@@ -1,0 +1,39 @@
+{
+  "document": "",
+  "database": "skills/institution-audit/lawdb/law.db",
+  "default_status": "现行有效",
+  "units": [
+    {
+      "unit_id": "C08-13",
+      "location": "第八条第（十三）项",
+      "proposition": {
+        "domain": "",
+        "matter": "",
+        "subject": "",
+        "counterparty": "",
+        "modality": "",
+        "action": "",
+        "object": "",
+        "conditions": "",
+        "numeric_rule": "",
+        "exception": ""
+      },
+      "conflict_hypotheses": [],
+      "core_entities": [],
+      "normalized_terms": [],
+      "queries": [
+        {
+          "query": "",
+          "mode": "body",
+          "status": "现行有效",
+          "count": 0,
+          "article_ids": []
+        }
+      ],
+      "candidates": [],
+      "rejected_candidates": [],
+      "final_basis_article_ids": [],
+      "result": "NEED_LIBRARY_SUPPLEMENT"
+    }
+  ]
+}

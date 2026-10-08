@@ -1,0 +1,7 @@
+{
+  "database": "skills/institution-audit/lawdb/law.db",
+  "readonly": true,
+  "default_status": "现行有效",
+  "fts_table": "articles_fts",
+  "tokenizer": "trigram"
+}

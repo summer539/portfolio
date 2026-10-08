@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>制度审核查看器（可编辑）</title>
+<style>
+:root{--bg:#f0f2f5;--panel:#fff;--border:#e4e7ed;--text:#1d2129;--muted:#86909c;--accent:#4f46e5;--accent-soft:#eef0ff;--accent-dark:#4338ca;--ins:#15803d;--ins-bg:#eef7f0;--del:#b91c1c;--del-bg:#fef2f2;--hi:#fef08a;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.06);--shadow-hover:0 2px 8px rgba(79,70,229,.08),0 8px 24px rgba(0,0,0,.08);--radius:10px;--radius-sm:6px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:"Segoe UI","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+#app{display:flex;flex-direction:column;height:100vh}
+header{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--border);flex:0 0 auto;box-shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.03)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;white-space:nowrap}
+.brand .dot{width:10px;height:10px;border-radius:3px;background:linear-gradient(135deg,var(--accent),#818cf8)}
+#fileBtn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600;font-size:13px;transition:background .2s ease,box-shadow .2s ease}
+#fileBtn:hover{background:var(--accent-dark);box-shadow:0 2px 8px rgba(79,70,229,.25)}
+#fileBtn input{display:none}
+#fileMeta{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.stat{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:12px;font-size:12px;font-weight:600}
+.stat.c{background:var(--accent-soft);color:var(--accent)}
+.stat.r{background:#fff3e0;color:#b35e00}
+main{display:flex;flex:1 1 auto;min-height:0}
+#docWrap{flex:1 1 auto;overflow:auto;padding:18px;display:block}
+#docWrap.drag{background:#e7ecff;outline:2px dashed var(--accent);outline-offset:-10px}
+#empty{margin:auto;text-align:center;color:var(--muted);max-width:440px;padding:30px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#empty .ic{font-size:52px;opacity:.35;margin-bottom:14px}
+#empty h2{margin:8px 0;font-size:18px;color:var(--text)}
+#empty p{margin:6px 0;line-height:1.7;color:var(--muted);max-width:360px}
+.page{position:relative;margin:0 auto 18px;box-shadow:var(--shadow);background:#fff;border-radius:2px}
+.page canvas{display:block}
+.jpin{position:absolute;transform:translate(-50%,-100%);font-size:20px;line-height:1;pointer-events:none;z-index:5;animation:jpinpop .25s ease;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+@keyframes jpinpop{0%{transform:translate(-50%,-100%) scale(.3);opacity:0}100%{transform:translate(-50%,-100%) scale(1);opacity:1}}
+#sidebar{flex:0 0 420px;display:flex;flex-direction:column;background:var(--panel);border-left:1px solid var(--border);min-width:0}
+.tabs{display:flex;border-bottom:1px solid var(--border);flex:0 0 auto}
+.tab{flex:1;padding:14px 8px;text-align:center;cursor:pointer;border-bottom:2px solid transparent;color:var(--muted);font-weight:600;font-size:13px;background:none;border-right:1px solid var(--border)}
+.tab:last-child{border-right:none}
+.tab .cnt{display:inline-block;min-width:18px;padding:1px 6px;border-radius:9px;background:#eef0f3;color:var(--muted);font-size:11px;margin-left:4px}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--accent-soft)}
+.tab.active .cnt{background:var(--accent-soft);color:var(--accent)}
+.tools{padding:9px 11px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex:0 0 auto;flex-wrap:wrap;align-items:center}
+.tools input,.tools select{flex:1;min-width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:#fff}
+.bulkbtn{padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;cursor:pointer;font-size:12px;font-weight:600;transition:border-color .2s,background .2s;color:var(--text)}
+.bulkbtn:hover{border-color:var(--accent);color:var(--accent)}
+.list{flex:1;overflow:auto;padding:10px}
+.list .none{text-align:center;color:var(--muted);padding:40px 10px;font-size:13px}
+.item{border:1px solid var(--border);border-radius:var(--radius);padding:11px 12px;margin-bottom:9px;background:#fff;cursor:pointer;transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease}
+.item:hover{border-color:var(--accent);box-shadow:var(--shadow-hover);transform:translateY(-1px)}
+.item .top{display:flex;align-items:center;gap:7px;margin-bottom:6px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px}
+.tag.ins{background:var(--ins-bg);color:var(--ins)}
+.tag.del{background:var(--del-bg);color:var(--del)}
+.tag.mv{background:#f3eafd;color:#722ed1}
+.tag.cmt{background:var(--accent-soft);color:var(--accent)}
+.au{font-weight:600;font-size:12px;color:var(--text);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dt{font-size:11px;color:var(--muted)}
+.ctx{font-size:12px;color:var(--muted);background:#f8f9fb;border-left:3px solid var(--accent);padding:6px 10px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;margin:6px 0;line-height:1.5;max-height:90px;overflow:auto;word-break:break-word}
+.ctx b{color:var(--text)}
+.body{font-size:13px;line-height:1.6;word-break:break-word}
+.body ins{color:var(--ins);text-decoration:underline}
+.body del{color:var(--del);text-decoration:line-through}
+.cmt-sec{margin-bottom:7px}.cmt-sec:last-child{margin-bottom:0}
+.cmt-revs{margin-top:7px;display:flex;flex-direction:column;gap:6px}
+.rchip{display:flex;align-items:flex-start;gap:6px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fafbfc}
+.rchip .rctxt{font-size:12px;line-height:1.5;word-break:break-word;flex:1;min-width:0}
+.rchip .rctxt.ins{color:var(--ins)}
+.rchip .rctxt.del{color:var(--del)}
+.cmt-lab{font-size:11px;font-weight:700;color:var(--accent-dark);margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.cmt-lab .ex{font-weight:400;font-size:11px;color:var(--muted);cursor:pointer;user-select:none;display:none}
+.cmt-lab .ex:hover{color:var(--accent)}
+.cmt-val{font-size:13px;line-height:1.6;word-break:break-word}
+.acts{display:flex;gap:6px;margin-top:8px}
+.act{flex:1;padding:6px 0;border:1px solid var(--border);border-radius:var(--radius-sm);transition:background .2s,border-color .2s;background:#fff;cursor:pointer;font-size:12px;font-weight:600}
+.act:hover{border-color:var(--accent);color:var(--accent)}
+.act.ok{color:var(--ins);border-color:var(--ins-bg)}
+.act.ok:hover{background:var(--ins-bg)}
+.act.no{color:var(--del);border-color:var(--del-bg)}
+.act.no:hover{background:var(--del-bg)}
+.foot{font-size:11px;color:var(--muted);margin-top:6px;text-align:right}
+#loader{position:fixed;inset:0;background:rgba(240,242,245,.82);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:50;font-size:14px;color:var(--accent);font-weight:600}
+#loader.show{display:flex}
+#loader .spin{width:18px;height:18px;border:3px solid var(--accent-soft);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 18px;border-radius:var(--radius);font-size:13px;z-index:60;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand"><span class="dot"></span>制度审核查看器 <span style="font-weight:400;color:var(--muted);font-size:12px">· WPS 高保真 · 可接受/拒绝修订、编辑批注</span></div>
+    <label id="fileBtn">打开文件<input type="file" id="fileInput" accept=".docx"></label>
+    <button id="exportBtn" class="bulkbtn" style="display:none">导出 docx</button><button id="cmpBtn" class="bulkbtn" style="display:none">进入对比视图</button><select id="zoomSel" class="bulkbtn" style="display:none"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option></select>
+    <div id="fileMeta">尚未加载文件 · 左侧 PDF 由 WPS 渲染，改完自动重出</div>
+    <span class="stat c" id="stC" style="display:none">批注 0</span>
+    <span class="stat r" id="stR" style="display:none">修订 0</span>
+  </header>
+  <main>
+    <div id="docWrap">
+      <div id="empty">
+        <div class="ic">&#128196;</div>
+        <h2>拖拽或点击「打开文件」加载文档</h2>
+        <p>左侧由 WPS 转为 PDF 渲染；右侧可接受/拒绝修订、编辑批注，操作后左侧用 WPS 重新渲染，完全保留排版。</p>
+      </div>
+    </div>
+    <aside id="sidebar">
+      <div class="tabs">
+        <div class="tab active" data-tab="c">合规审核<span class="cnt" id="cntC">0</span></div>
+        <div class="tab" data-tab="r">修订<span class="cnt" id="cntR">0</span></div>
+      </div>
+      <div class="tools">
+        <button class="bulkbtn" id="acceptAll" title="接受全部修订">全部接受</button>
+        <button class="bulkbtn" id="rejectAll" title="拒绝全部修订">全部拒绝</button>
+        <input type="text" id="q" placeholder="搜索…">
+        <select id="auFilter"><option value="">全部作者</option></select>
+      </div>
+      <div class="list" id="listC"></div>
+      <div class="list" id="listR" style="display:none"></div>
+    </aside>
+  </main>
+</div>
+<style>
+.cmp-bar{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--border)}
+.cmp-body{display:flex;flex:1;min-height:0}
+.cmp-col{flex:1;display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--border)}
+.cmp-col:last-child{border-right:none}
+.cmp-col.cmp-right{flex:0 0 380px}
+.cmp-hd{padding:10px 14px;background:#f8f9fb;border-bottom:1px solid var(--border);font-weight:600;font-size:13px;flex:0 0 auto}
+.cmp-scroll{flex:1;overflow:auto;padding:14px;display:block}
+.cmp-tabs{display:flex;border-bottom:1px solid var(--border);flex:0 0 auto}
+.ctab{flex:1;padding:8px 4px;border:none;background:#fff;cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);border-right:1px solid var(--border)}
+.ctab:last-child{border-right:none}
+.ctab.active{color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
+.ditem{border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px;background:#fff;cursor:pointer;font-size:12px}
+.ditem:hover{border-color:var(--accent)}.ditem.sel{border-color:var(--accent);box-shadow:0 0 0 2px rgba(47,84,235,.25);background:#fafbff}
+.drow{margin:3px 0;line-height:1.5;word-break:break-word}
+.drow .lab{font-size:10px;color:var(--muted);margin-right:4px;font-weight:700}
+.drow.add{color:var(--ins)}
+.drow.del{color:var(--del)}
+.dhd{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.ctag2{font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px}
+.ctag2.add{background:var(--ins-bg);color:var(--ins)}
+.ctag2.del{background:var(--del-bg);color:var(--del)}
+.ctag2.mod{background:#f3eafd;color:#722ed1}
+.dau{font-size:11px;color:var(--muted)}
+.txt{font-size:12px;line-height:1.6;word-break:break-word;white-space:pre-wrap;cursor:pointer;margin-bottom:9px;padding:8px 10px;background:#f8f9fb;border-radius:var(--radius-sm);border-left:3px solid var(--border)}
+.txt.add{border-left-color:var(--ins)}
+.txt.del{border-left-color:var(--del)}
+.clamp2{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.clamp2.open{-webkit-line-clamp:unset;overflow:visible}
+.sub{font-size:11px;font-weight:700;margin:2px 0 4px}
+.sub.add{color:var(--ins)}
+.sub.del{color:var(--del)}
+.exbtn{margin-left:auto;border:1px solid var(--border);background:#fff;border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;color:var(--accent);font-weight:600}
+.exbtn:hover{background:var(--accent-soft)}
+#cmpDiff{display:block !important;align-items:stretch !important}
+.ditem{width:100%;box-sizing:border-box}
+</style>
+<div id="compareView" style="display:none;flex-direction:column;height:100vh;background:var(--bg)">
+  <div class="cmp-bar">
+    <button id="cmpBack" class="bulkbtn">← 返回编辑</button>
+    <span style="font-weight:600;font-size:14px">修订对比</span>
+    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px"><input type="checkbox" id="syncScroll" checked>同步滚动</label><select id="cmpZoom" class="bulkbtn"><option value="0.5">50%</option><option value="0.75">75%</option><option value="1" selected>100%</option><option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option></select>
+    <span id="cmpMeta" style="color:var(--muted);font-size:12px;flex:1"></span>
+  </div>
+  <div class="cmp-body">
+    <div class="cmp-col"><div class="cmp-hd">原始（修订前）</div><div class="cmp-scroll" id="cmpLeft"></div></div>
+    <div class="cmp-col"><div class="cmp-hd">修订后</div><div class="cmp-scroll" id="cmpMid"></div></div>
+    <div class="cmp-col cmp-right"><div class="cmp-hd">差异</div>
+      <div class="cmp-tabs"><button class="ctab active" data-cat="all">全部</button><button class="ctab" data-cat="add">新增</button><button class="ctab" data-cat="del">删除</button><button class="ctab" data-cat="mod">修改</button></div>
+      <div class="cmp-scroll" id="cmpDiff"></div>
+    </div>
+  </div>
+</div><div id="loader"><span class="spin"></span><span id="loaderTxt">正在用 WPS 重新渲染…</span></div>
+<div id="toast"></div>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>
+const docWrap=document.getElementById("docWrap");
+const fileInput=document.getElementById("fileInput");
+const fileMeta=document.getElementById("fileMeta");
+const stC=document.getElementById("stC"),stR=document.getElementById("stR");
+const cntC=document.getElementById("cntC"),cntR=document.getElementById("cntR");
+const listC=document.getElementById("listC"),listR=document.getElementById("listR");
+const qInput=document.getElementById("q"),auFilter=document.getElementById("auFilter");
+const loader=document.getElementById("loader"),loaderTxt=document.getElementById("loaderTxt"),toast=document.getElementById("toast");
+let COMMENTS=[],REVISIONS=[],CCTX={},CCTX_META={},CREVS={},PAGES=[],ZOOM=1,LAST_PDF=null,LEFT_BUF=null,MID_BUF=null;
+const RENDER_RIGHT=true;//右侧修订/批注卡片渲染开关
+pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+function norm(s){return (s||"").replace(/\s+/gu,"").replace(/[\uFF01-\uFF5E]/g,m=>String.fromCharCode(m.charCodeAt(0)-0xFEE0))}
+function normKeep(s){return (s||"").replace(/[\uFF01-\uFF5E]/g,m=>String.fromCharCode(m.charCodeAt(0)-0xFEE0))}
+// 把页面 items 构建为“去空白字符序列”，每个字符带坐标来源（带缓存）
+function buildCharSeq(page){
+  if(page._charSeq)return page._charSeq;
+  const items=page.items||[];
+  const seq=[]; // {ch, x0,x1,y0,y1}
+  for(const it of items){
+    const raw=it.str||"";if(!raw)continue;
+    const tr=it.transform||[1,0,0,1,0,0];
+    const tx=tr[4],ty=tr[5];
+    const w=it.width||0;
+    const h=Math.abs(it.height||tr[3]||12);
+    const fontScale=Math.hypot(tr[0],tr[1])||1;
+    const totalW=w||(raw.length*fontScale*5);
+    const cw=raw.length?totalW/raw.length:0;
+    let x=tx;
+    for(let i=0;i<raw.length;i++){
+      const c=raw[i];
+      if(/\s/.test(c)){x+=cw;continue;}
+      seq.push({ch:c,x0:x,x1:x+cw,y0:ty,y1:ty+h});
+      x+=cw;
+    }
+  }
+  page._charSeq=seq;
+  return seq;
+}
+// 生成长度合适的定位变体：短文本直接用；长文本取头/中/尾片段，提高命中率
+function needleVariants(needle){
+  const n=norm(needle);
+  const out=[];
+  if(!n)return out;
+  if(n.length<=120){out.push(n);return out;}
+  out.push(n.slice(0,80));
+  const mid=n.length>>1;
+  out.push(n.slice(mid-40,mid+40));
+  out.push(n.slice(-80));
+  return out;
+}
+function findBestRange(page,normNeedle){
+  const seq=buildCharSeq(page);
+  if(!seq.length||!normNeedle)return null;
+  // full 与 needle 同空间：全角转半角（去掉空白），保证 indexOf 与扩展对齐
+  const full=page._charFull||(page._charFull=norm(seq.map(c=>c.ch).join("")));
+  const nLen=normNeedle.length;if(nLen>full.length)return null;
+  let idx=full.indexOf(normNeedle);
+  if(idx<0){
+    // 渐进锚定：取 needle 的最长连续核心片段，找到后向两侧扩展（全程在 full 与 needle 之间对齐）
+    const pieces=splitPieces(normNeedle);
+    let best=null,bestScore=-1;
+    for(const pc of pieces){
+      let pi=full.indexOf(pc);
+      if(pi<0)continue;
+      let l=pi,r=pi+pc.length;          // 已匹配区间在 full 中的位置
+      let bl=0,br=pc.length;            // 对应 needle 中的位置
+      // 向左扩展：needle[bl-1] 必须等于 full[l-1]
+      while(bl>0&&l>0&&full[l-1]===normNeedle[bl-1]){l--;bl--;}
+      // 向右扩展：needle[br] 必须等于 full[r]
+      while(br<nLen&&r<full.length&&full[r]===normNeedle[br]){r++;br++;}
+      const score=br-bl;
+      if(score>bestScore){bestScore=score;best={l:l,r:r}}
+    }
+    if(!best)return null;
+    idx=best.l;
+    return {seq,start:idx,end:best.r};
+  }
+  return {seq,start:idx,end:idx+nLen};
+}
+function splitPieces(n){
+  const out=[];let cur="";
+  for(const ch of n){
+    if(/[\u4e00-\u9fa5A-Za-z0-9]/.test(ch)){cur+=ch}
+    else{if(cur){out.push(cur);cur=""}}
+  }
+  if(cur)out.push(cur);
+  out.sort((a,b)=>b.length-a.length); // 最长片段优先，锚定更准
+  return out;
+}
+// ===== 条款编号定位（优先于文本锚点）=====
+// 从上下文文本提取条款编号：第三条/第3条/第二章/3.2.1/（一）/一、
+function extractClauseKeys(texts){
+  const all=[];const seen=new Set();
+  const push=(k,src,pos)=>{const n=norm(k);if(n.length<2||seen.has(n))return;seen.add(n);all.push({k:n,src:src,pos:pos});};
+  (texts||[]).forEach((t,src)=>{
+    if(!t)return;
+    const s=normKeep(t);let m;
+    let re=/第(?:[0-9]+|[一二三四五六七八九十百零两]{1,6})[条章节款项]/g;
+    while((m=re.exec(s)))push(m[0],src,m.index);
+    re=/(?:^|[。；;！\n])\s*(\d+(?:\.\d+){1,3})/g; // 层级编号 3.2 / 3.2.1
+    while((m=re.exec(s)))push(m[1],src,m.index);
+    re=/[（(][一二三四五六七八九十]{1,3}[)）]/g; // （一）（二）
+    while((m=re.exec(s)))push(m[0],src,m.index);
+    re=/(?:^|[。；;！\n])\s*([一二三四五六七八九十]{1,3})、/g; // 一、二、
+    while((m=re.exec(s)))push(m[1]+"、",src,m.index);
+  });
+  // 段首出现的编号（大概率是该段落的条款标题）优先，其余按出现顺序兜底
+  return all.filter(x=>x.pos<15).concat(all.filter(x=>x.pos>=15)).map(x=>x.k);
+}
+// 找出某页中 key 的所有命中位置（full 与 seq 索引一一对应）
+function findAllIdx(pg,key){
+  const seq=buildCharSeq(pg);
+  const full=pg._charFull||(pg._charFull=norm(seq.map(c=>c.ch).join("")));
+  const idxs=[];let i=full.indexOf(key);
+  while(i>=0){idxs.push(i);i=full.indexOf(key,i+1);}
+  return {seq,idxs};
+}
+// 命中位置是否为“条款标题式”出现：位于行首（无前字/前字在另一行/前字为句末标点）
+function isHeadingPos(seq,idx){
+  if(idx===0)return true;
+  const p=seq[idx-1],c=seq[idx];
+  if(!p||!c)return true;
+  if("。；：！？".indexOf(p.ch)>=0)return true;
+  return Math.abs(p.y0-c.y0)>Math.max(2,(c.y1-c.y0)*0.5);
+}
+// 在所有页面中查找 key 的最佳命中（headingOnly=true 时只认“行首标题式”命中，防止跳到正文引用处）
+function findClauseOcc(pagesArr,key,headingOnly){
+  const numericHead=/^[0-9]/.test(key);
+  for(const pg of pagesArr){
+    let seq,idxs;
+    try{const r=findAllIdx(pg,key);seq=r.seq;idxs=r.idxs;}catch(e){continue;}
+    if(!idxs||!idxs.length)continue;
+    // 数字型编号：后面紧跟数字/点的是更长编号的前缀（如 3.2 命中 3.21），排除
+    const valid=idxs.filter(i=>{const after=seq[i+key.length];return !(numericHead&&after&&/[0-9.]/.test(after.ch));});
+    if(!valid.length)continue;
+    const pick=headingOnly?valid.find(i=>isHeadingPos(seq,i)):valid[0];
+    if(pick!=null)return {pg:pg,seq:seq,idx:pick};
+  }
+  return null;
+}
+// 按条款编号跳转：先找行首标题式命中，找不到再退而求其次找任意命中；命中后滚动到条款标题中心
+let LAST_PIN=null;
+function clearPin(){if(LAST_PIN){try{LAST_PIN.remove();}catch(e){}LAST_PIN=null;}}
+function placePin(pg,c){
+  clearPin();
+  const rr=pg.viewport.convertToViewportRectangle([c.x0,c.y0,c.x1,c.y1]);
+  const cx=(rr[0]+rr[2])/2, top=Math.min(rr[1],rr[3]);
+  const m=document.createElement("div");
+  m.className="jpin"; m.textContent="📌";
+  m.style.left=cx+"px"; m.style.top=top+"px";
+  pg.el.appendChild(m); LAST_PIN=m;
+  setTimeout(clearPin,12000);
+}
+function scrollToOcc(occ,off){
+  const c=occ.seq[Math.floor(off)];
+  const rr=occ.pg.viewport.convertToViewportRectangle([c.x0,c.y0,c.x1,c.y1]);
+  const vy=(rr[1]+rr[3])/2;
+  const wrap=occ.pg.el.parentElement;
+  if(!wrap)return false;
+  const wrapRect=wrap.getBoundingClientRect();
+  const elRect=occ.pg.el.getBoundingClientRect();
+  const elTopInWrap=elRect.top-wrapRect.top+wrap.scrollTop;
+  const target=elTopInWrap+vy-wrap.clientHeight/2;
+  wrap.scrollTo({top:Math.max(0,target),behavior:"smooth"});
+  placePin(occ.pg,c);
+  return true;
+}
+function findAllClauseOcc(pagesArr,key,headingOnly){
+  const numericHead=/^[0-9]/.test(key);
+  const out=[];
+  for(const pg of pagesArr){
+    let seq,idxs;
+    try{const r=findAllIdx(pg,key);seq=r.seq;idxs=r.idxs;}catch(e){continue;}
+    if(!idxs||!idxs.length)continue;
+    const valid=idxs.filter(i=>{const after=seq[i+key.length];return !(numericHead&&after&&/[0-9.]/.test(after.ch));});
+    if(!valid.length)continue;
+    for(const i of valid){
+      if(!headingOnly||isHeadingPos(seq,i)) out.push({pg:pg,seq:seq,idx:i});
+    }
+  }
+  return out;
+}
+function jumpToClauseIn(pagesArr,keys,ord){
+  for(const headingOnly of [true,false]){
+    for(const key of keys){
+      if(!key||key.length<2)continue;
+      const occs=findAllClauseOcc(pagesArr,key,headingOnly);
+      if(!occs.length)continue;
+      const pick=occs[Math.min(ord||0,occs.length-1)];
+      if(scrollToOcc(pick,pick.idx+key.length/2))return true;
+    }
+  }
+  return false;
+}
+function showLoader(b,txt){loader.classList.toggle("show",b);if(txt)loaderTxt.textContent=txt}
+function showToast(m){toast.textContent=m;toast.classList.add("show");setTimeout(()=>toast.classList.remove("show"),1800)}
+function esc(s){return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function snip(s,n){s=s||"";return s.length>n?s.slice(0,n)+"…":s}
+function fmtDate(s){if(!s)return"";try{return new Date(s).toLocaleString("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"})}catch(e){return s}}function applyPayload(j){
+  COMMENTS=j.comments||[];REVISIONS=j.revisions||[];CCTX=j.ctx||{};CCTX_META=j.ctxMeta||{};CREVS=j.commentRevs||{};
+  const o=j.order||{};COMMENTS.sort((a,b)=>((o[a.id]??9999)-(o[b.id]??9999)));
+  updateCounts();buildAuthorFilter();
+}
+function updateCounts(){if(!RENDER_RIGHT){cntC.textContent=cntR.textContent="0";stC.style.display=stR.style.display="none";return;}cntC.textContent=COMMENTS.length;cntR.textContent=REVISIONS.length;stC.style.display=COMMENTS.length?"":"none";stC.textContent="批注 "+COMMENTS.length;stR.style.display=REVISIONS.length?"":"none";stR.textContent="修订 "+REVISIONS.length;}
+function buildAuthorFilter(){const set=new Set();[...COMMENTS,...REVISIONS].forEach(it=>set.add(it.author));const cur=auFilter.value;auFilter.innerHTML='<option value="">全部作者</option>'+[...set].sort().map(a=>`<option value="${esc(a)}">${esc(a)}</option>`).join("");if(cur)auFilter.value=cur;}
+function revChips(cid){const rids=CREVS[cid]||[];if(!rids.length)return "";let chips="";for(const rid of rids){const r=(REVISIONS||[]).find(x=>x.id===rid);if(!r)continue;const cls=r.type==="ins"?"ins":(r.type==="del"?"del":"mv");const lab=r.label||(r.type==="ins"?"新增":(r.type==="del"?"删除":"移动"));chips+=`<div class="rchip"><span class="tag ${cls}">${esc(lab)}</span><span class="rctxt ${cls}">${esc(snip(r.text,300))||"（无文本）"}</span></div>`;}if(!chips)return "";return `<div class="cmt-revs">${chips}<div class="acts"><button class="act ok" data-act="acceptComment" data-id="${esc(cid)}">接受（全部）</button><button class="act no" data-act="rejectComment" data-id="${esc(cid)}">拒绝（全部）</button></div></div>`;}
+function extractMod(text){var m=text.match(/【修改】[：:]?\s*/);if(!m)return "";var s=m.index+m[0].length;var m2=text.slice(s).match(/【(修订依据|修订建议|修订性质|修改依据|修改建议)】/);var e=m2?s+m2.index:text.length;return text.slice(s,e).trim();}
+function commentBody(text,cid){const re=/【(修改|修订依据|修订建议|修订性质|修改依据|修改建议)】[：:]?\s*/g;const parts=[];let m,last=0,found=false;while((m=re.exec(text))){found=true;if(parts.length)parts[parts.length-1].val=text.slice(last,m.index).trim();parts.push({lab:m[1],val:""});last=re.lastIndex;}if(!found)return `<div class="cmt-val">${esc(snip(text,4000))}</div>`;parts[parts.length-1].val=text.slice(last).trim();return parts.filter(function(p){return p.lab!=="修改"&&p.lab!=="修订性质"}).map(p=>{const clamp=(p.lab==="修订依据"||p.lab==="修订建议"||p.lab==="修订性质"||p.lab==="修改建议"||p.lab==="修改依据"||p.lab==="修改建议");return `<div class="cmt-sec"><div class="cmt-lab">${esc(p.lab)}${clamp?`<span class="ex">展开</span>`:""}</div><div class="cmt-val${clamp?" clamp2":""}">${esc(snip(p.val,4000))}</div>${p.lab==="修订建议"||p.lab==="修订性质"||p.lab==="修改建议"?"":""}</div>`;}).join("");}
+function renderList(){
+  if(!RENDER_RIGHT){listC.innerHTML=listR.innerHTML='<div class="none">已暂停渲染</div>';return;}
+  const tab=document.querySelector(".tab.active").dataset.tab;const q=qInput.value.trim().toLowerCase();const au=auFilter.value;
+  const list=tab==="c"?COMMENTS:REVISIONS;const cont=tab==="c"?listC:listR;let html="",shown=0;
+  for(const it of list){
+    if(au&&it.author!==au)continue;const hay=(it.text+" "+it.author).toLowerCase();if(q&&!hay.includes(q))continue;shown++;
+    if(tab==="c"){const ctx=CCTX[it.id]||"";
+      html+=`<div class="item" data-id="${esc(it.id)}" data-ctx="${esc(snip(ctx,200))}"><div class="top"><span class="tag cmt">问题${shown}</span><span class="au" title="${esc(it.author)}">${esc(it.author)}</span><span class="dt">${fmtDate(it.date)}</span></div>${extractMod(it.text)?`<div class="ctx"><b>问题描述：</b>${esc(snip(extractMod(it.text),300))}</div>`:""}<div class="body">${commentBody(it.text,it.id)}</div>${(CREVS[it.id]||[]).length?`<div class="acts"><button class="act ok" data-act="acceptComment" data-id="${esc(it.id)}">接受</button><button class="act no" data-act="rejectComment" data-id="${esc(it.id)}">拒绝</button></div>`:""}</div>`;
+    }else{const cls=it.type==="ins"?"ins":(it.type==="del"?"del":"mv");
+      html+=`<div class="item" data-id="${esc(it.id)}" data-text="${esc(snip(it.text,200))}"><div class="top"><span class="tag ${cls}">${esc(it.label)}</span><span class="au" title="${esc(it.author)}">${esc(it.author)}</span><span class="dt">${fmtDate(it.date)}</span></div><div class="body"><span class="${cls}">${esc(it.text)||"（无文本，可能为格式/属性修订）"}</span></div><div class="acts"><button class="act ok" data-act="accept" data-id="${esc(it.id)}">接受</button><button class="act no" data-act="reject" data-id="${esc(it.id)}">拒绝</button></div></div>`;
+    }
+  }
+  cont.innerHTML=shown?html:`<div class="none">${COMMENTS.length===0&&REVISIONS.length===0?"该文档无批注与修订":"无匹配项"}</div>`;
+  cont.querySelectorAll(".cmt-val.clamp2").forEach(v=>{const ex=v.previousElementSibling&&v.previousElementSibling.querySelector(".ex");if(ex)ex.style.display=(v.scrollHeight>v.clientHeight+2)?"inline-block":"none";});
+}
+function jumpToScrollOnly(cands,nth){jumpToScrollOnlyIn(PAGES,cands,nth);}
+function jumpToComment(cid){
+  const m=CCTX_META&&CCTX_META[cid];
+  const ord=(COMMENTS||[]).findIndex(x=>x.id===cid);
+  // 1) 优先：用该批注名下修订的 pre+text 精确定位到“改动发生处”
+  //    （修订文本短、就在改动点，比批注范围文本准；删除文本烘焙后仍以删除线形式存在，可定位）
+  const revCands=[];
+  for(const rid of (CREVS[cid]||[])){
+    const r=(REVISIONS||[]).find(x=>x.id===rid);
+    if(!r)continue;
+    if(r.pre&&r.text) revCands.push(r.pre+r.text);
+    if(r.text) revCands.push(r.text);
+    if(r.pre) revCands.push(r.pre);
+  }
+  if(revCands.length&&canLocateAny(PAGES,revCands)){jumpToScrollOnly(revCands,ord);return;}
+  // 2) 条款编号（跳到所在条款标题，较粗）
+  const keys=extractClauseKeys([m&&m.para,m&&m.range,m&&m.pre,m&&m.next,CCTX[cid]]);
+  if(keys.length&&jumpToClauseIn(PAGES,keys,ord))return;
+  // 3) 兜底：批注范围/段落/前后文文本锚点
+  const cands=[];
+  if(m){
+    if(m.range) cands.push(m.range);
+    if(m.para) cands.push(m.para);
+    if(m.pre) cands.push(m.pre.slice(-24));
+    if(m.next) cands.push(m.next.slice(0,24));
+    if(m.pre&&m.next) cands.push(m.pre.slice(-12)+m.next.slice(0,12));
+  }
+  if(CCTX[cid]) cands.push(CCTX[cid]);
+  jumpToScrollOnly(cands.filter(Boolean),ord);
+}
+function scrollToSeqMatch(pg,seq,start,end){
+  const c=seq[Math.floor((start+end)/2)];
+  const rr=pg.viewport.convertToViewportRectangle([c.x0,c.y0,c.x1,c.y1]);
+  const vy=(rr[1]+rr[3])/2;
+  const wrap=pg.el.parentElement;
+  if(!wrap)return false;
+  const wrapRect=wrap.getBoundingClientRect();
+  const elRect=pg.el.getBoundingClientRect();
+  const elTopInWrap=elRect.top-wrapRect.top+wrap.scrollTop;
+  const target=elTopInWrap+vy-wrap.clientHeight/2;
+  wrap.scrollTo({top:Math.max(0,target),behavior:"smooth"});
+  placePin(pg,c);
+  return true;
+}
+function allContiguousMatches(pagesArr,needle){
+  // 优先用整串匹配：命中区间=整段范围，📌 落在范围中心；整串不连续命中再退回片段
+  const fullN=norm(needle);
+  const tries=[];
+  if(fullN)tries.push(fullN);
+  for(const v of needleVariants(needle)){if(v&&v!==fullN)tries.push(v);}
+  for(const n of tries){
+    if(!n)continue;
+    const out=[];
+    for(const pg of pagesArr){
+      try{
+        const seq=buildCharSeq(pg);
+        const full=pg._charFull||(pg._charFull=norm(seq.map(c=>c.ch).join("")));
+        let i=full.indexOf(n);
+        while(i>=0){out.push({pg,seq,start:i,end:i+n.length});i=full.indexOf(n,i+1);}
+      }catch(e){continue;}
+    }
+    if(out.length)return out;
+  }
+  return [];
+}
+function jumpToScrollOnlyIn(pagesArr,cands,nth){
+  // 只滚动到匹配位置，不生成高亮框（PDF 自带 WPS 渲染的批注/修订高亮）
+  cands=[...new Set((cands||[]).filter(x=>x&&x.trim()))];
+  if(!cands.length){showToast("未取到定位文本");return;}
+  // 按序取第 nth 个命中：第几条批注取第几个位置，避免跳到更靠前的相同文本处
+  if(nth!=null){
+    for(const needle of cands){
+      const ms=allContiguousMatches(pagesArr,needle);
+      if(ms.length){
+        const pick=ms[Math.min(nth,ms.length-1)];
+        if(scrollToSeqMatch(pick.pg,pick.seq,pick.start,pick.end))return;
+      }
+    }
+  }
+  // 兜底：首个命中（含渐进锚定/部分匹配），行为与原先一致
+  for(const needle of cands){
+    const variants=needleVariants(needle);
+    for(const n of variants){
+      if(!n)continue;
+      for(const pg of pagesArr){
+        let res=null;
+        try{res=findBestRange(pg,n);}catch(e){continue;}
+        if(!res||!res.seq||res.start>=res.end)continue;
+        if(scrollToSeqMatch(pg,res.seq,res.start,res.end))return;
+      }
+    }
+  }
+  console.warn("[viewer] scroll locate failed:",cands.map(x=>norm(x).slice(0,30)));
+  showToast("未在 PDF 中定位到该处");
+}
+function jumpToRev(r){
+  // 修订文本已由 docx 自带高亮（ins 绿 / del 红，WPS 渲染 PDF 时显示），这里只滚动定位
+  // 删除型修订：被删文本在 final PDF 中不存在，优先按条款编号（来自前文）跳到所在条款标题
+  const delType=(r.type==="del"||r.type==="moveFrom");
+  const keys=extractClauseKeys([r.pre,r.text]);
+  if(delType&&keys.length&&jumpToClauseIn(PAGES,keys))return;
+  const cands=[];
+  if(r.type==="del"||r.type==="moveFrom"){
+    // 删除型修订：被删文本在 final PDF 中不存在（已按接受处理），
+    // 但 del 文本被标红后不会出现在 final 版；改用 pre 上下文滚动定位
+    if(r.pre){
+      const preTail = r.pre.length>14 ? r.pre.slice(-14) : r.pre;
+      cands.push(preTail);
+      cands.push(r.pre);
+    }
+    if(r.pre&&r.text) cands.push(r.pre+r.text);
+  }else{
+    // 新增/移入型：文本在 final PDF 中绿色高亮，直接定位 text
+    if(r.text) cands.push(r.text);
+    if(r.pre) cands.push(r.pre+(r.text||""));
+  }
+  // 新增型：先试文本锚点（文本在 final PDF 中存在，定位最准）；全部失败再用条款编号兜底
+  const list=cands.filter(Boolean);
+  if(list.length&&canLocateAny(PAGES,list)){jumpToScrollOnly(list);return;}
+  if(!delType&&keys.length&&jumpToClauseIn(PAGES,keys))return;
+  jumpToScrollOnly(list);
+}
+// 静默判断候选文本能否在 PDF 中定位（不滚动、不弹提示）
+function canLocateAny(pagesArr,cands){
+  for(const needle of [...new Set((cands||[]).filter(x=>x&&x.trim()))]){
+    for(const n of needleVariants(needle)){
+      if(!n)continue;
+      for(const pg of pagesArr){
+        let res=null;
+        try{res=findBestRange(pg,n);}catch(e){continue;}
+        if(res&&res.seq&&res.start<res.end)return true;
+      }
+    }
+  }
+  return false;
+}
+listC.addEventListener("click",e=>{const ex=e.target.closest(".ex");if(ex){e.stopPropagation();const v=ex.closest(".cmt-sec").querySelector(".cmt-val");const open=v.classList.contains("open");v.classList.toggle("open",!open);ex.textContent=open?"展开":"收起";return;}const b=e.target.closest("[data-act]");if(b){e.stopPropagation();const act=b.dataset.act,id=b.dataset.id;if(act==="editComment"){const c=COMMENTS.find(x=>x.id===id);const t=prompt("编辑批注内容：",c?c.text:"");if(t!=null)doAction("edit_comment",id,t);}else if(act==="delComment"){if(confirm("删除该批注？"))doAction("delete_comment",id);}else if(act==="acceptComment"){doAction("accept_comment",id);}else if(act==="rejectComment"){doAction("reject_comment",id);}return;}
+  const it=e.target.closest(".item");if(!it)return;const cid=it.getAttribute("data-id");jumpToComment(cid);});
+listR.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(b){e.stopPropagation();doAction(b.dataset.act,b.dataset.id);return;}
+  const it=e.target.closest(".item");if(!it)return;const id=it.getAttribute("data-id");const r=REVISIONS.find(x=>x.id===id);if(r)jumpToRev(r);});
+document.getElementById("acceptAll").addEventListener("click",()=>{if(confirm("接受全部修订？"))doAction("accept_all");});
+document.getElementById("rejectAll").addEventListener("click",()=>{if(confirm("拒绝全部修订？"))doAction("reject_all");});
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");const tab=t.dataset.tab;listC.style.display=tab==="c"?"":"none";listR.style.display=tab==="r"?"":"none";renderList();}));
+qInput.addEventListener("input",renderList);auFilter.addEventListener("change",renderList);
+async function renderPdfInto(buf,container,pagesArr){
+  const pdf=await pdfjsLib.getDocument({data:buf.slice(0)}).promise;
+  for(let p=1;p<=pdf.numPages;p++){const page=await pdf.getPage(p);const baseVp=page.getViewport({scale:1});
+    const vp=page.getViewport({scale:ZOOM});
+    const wrap=document.createElement("div");wrap.className="page";wrap.style.width=vp.width+"px";wrap.style.height=vp.height+"px";const cv=document.createElement("canvas");cv.width=vp.width;cv.height=vp.height;wrap.appendChild(cv);container.appendChild(wrap);
+    const items=(await page.getTextContent()).items;pagesArr.push({el:wrap,items:items,viewport:vp,baseViewport:baseVp});await page.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;}
+}
+async function renderMain(){if(!LAST_PDF)return;PAGES=[];docWrap.innerHTML="";await renderPdfInto(LAST_PDF,docWrap,PAGES);}
+async function refreshPdf(){const r=await fetch("/api/pdf");if(!r.ok)throw new Error("PDF 获取失败");LAST_PDF=await r.arrayBuffer();await renderMain();}
+async function doAction(op,id,text){
+  showLoader(true,"WPS 重新渲染中…");
+  try{const r=await fetch("/api/action",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({op,id,text})});
+    if(!r.ok){const t=await r.text();throw new Error(t.slice(0,200));}
+    const j=await r.json();applyPayload(j);await refreshPdf();renderList();showToast("已完成");}
+  catch(e){console.error(e);showToast("操作失败: "+(e.message||""));}finally{showLoader(false);}
+}
+async function loadFile(file){
+  if(!/\.docx$/i.test(file.name)){showToast("请选择 .docx 文件");return;}
+  showLoader(true,"正在转换并渲染…");
+  try{const ab=await file.arrayBuffer();const r=await fetch("/api/open",{method:"POST",body:ab.slice(0)});
+    if(!r.ok){const t=await r.text();throw new Error(t.slice(0,200));}
+    const j=await r.json();applyPayload(j);await refreshPdf();
+    fileMeta.textContent=file.name+" · 批注 "+COMMENTS.length+" · 修订 "+REVISIONS.length+" · "+PAGES.length+" 页";
+    document.querySelector('.tab[data-tab="c"]').click();document.getElementById("exportBtn").style.display="";document.getElementById("cmpBtn").style.display="";document.getElementById("zoomSel").style.display="";showToast("加载完成");}
+  catch(err){console.error(err);docWrap.innerHTML=`<div id="empty"><div class="ic">&#9888;</div><h2>加载失败</h2><p>${esc(err.message||String(err))}</p><p style="font-size:12px">请确认 server.py 正在运行且 WPS 已安装。</p></div>`;showToast("加载失败");}
+  finally{showLoader(false);}
+}
+fileInput.addEventListener("change",e=>loadFile(e.target.files[0]));
+docWrap.addEventListener("dragover",e=>{e.preventDefault();docWrap.classList.add("drag")});
+docWrap.addEventListener("dragleave",()=>docWrap.classList.remove("drag"));
+docWrap.addEventListener("drop",e=>{e.preventDefault();docWrap.classList.remove("drag");loadFile(e.dataTransfer.files[0])});
+document.getElementById("exportBtn").addEventListener("click",async()=>{
+  try{const r=await fetch("/api/download");if(!r.ok)throw new Error("导出失败");const b=await r.blob();const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download="edited.docx";a.click();URL.revokeObjectURL(u);}catch(e){showToast("导出失败");}});
+updateCounts();renderList();
+</script>
+<script>
+let LEFT_PAGES=[],MID_PAGES=[],DIFF={};
+document.getElementById("cmpBtn").addEventListener("click",enterCompare);
+document.getElementById("cmpBack").addEventListener("click",()=>{document.getElementById("compareView").style.display="none";document.getElementById("app").style.display="flex";});
+document.querySelectorAll(".ctab").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".ctab").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderDiff();}));
+function diffList(cat){return cat==="all"?DIFF.all:cat==="add"?DIFF.adds:cat==="del"?DIFF.dels:DIFF.mods;}
+function renderDiff(){
+  const cat=document.querySelector(".ctab.active").dataset.cat;const list=diffList(cat);const cont=document.getElementById("cmpDiff");
+  if(!list||!list.length){cont.innerHTML='<div class="none">无</div>';return;}
+  cont.innerHTML=list.map((it,idx)=>{
+    const tag=it.cat==="add"?'<span class="ctag2 add">新增</span>':it.cat==="del"?'<span class="ctag2 del">删除</span>':'<span class="ctag2 mod">修改</span>';
+    const au=it.author?`<span class="dau">${esc(snip(it.author,20))}</span>`:"";
+    const long=((it.new||"").length>50||(it.old||"").length>50);
+    const ex=long?'<button class="exbtn">展开</button>':'';
+    let body="";
+    if(it.cat==="add")body=`<div class="txt add clamp2">${esc(snip(it.new,1000))||"（空）"}</div>`;
+    else if(it.cat==="del")body=`<div class="txt del clamp2">${esc(snip(it.old,1000))||"（空）"}</div>`;
+    else body=`<div class="sub del">原始</div><div class="txt del clamp2">${esc(snip(it.old,1000))||"（空）"}</div><div class="sub add">修改</div><div class="txt add clamp2" style="margin-bottom:0">${esc(snip(it.new,1000))||"（空）"}</div>`;
+    return `<div class="ditem" data-i="${idx}" data-cat="${it.cat}"><div class="dhd">${tag}${au}${ex}</div>${body}</div>`;}).join("");
+}
+document.getElementById("cmpDiff").addEventListener("click",e=>{
+  const ex=e.target.closest(".exbtn");
+  if(ex){e.stopPropagation();const card=ex.closest(".ditem");const cls=card.querySelectorAll(".clamp2");const anyOpen=[...cls].some(x=>x.classList.contains("open"));cls.forEach(x=>x.classList.toggle("open",!anyOpen));ex.textContent=anyOpen?"展开":"收起";return;}
+  const it=e.target.closest(".ditem");if(!it)return;document.querySelectorAll("#cmpDiff .ditem.sel").forEach(x=>x.classList.remove("sel"));it.classList.add("sel");const d=diffList(document.querySelector(".ctab.active").dataset.cat)[+it.dataset.i];if(!d)return;
+  // 点击卡片后取消同步滚动，两个文件各自滚动到定位处
+  document.getElementById("syncScroll").checked=false;
+  const aIdx=(DIFF.all||[]).indexOf(d);
+  jumpToScrollOnlyIn(LEFT_PAGES,[d.pre+d.old,d.old,d.pre].filter(Boolean),aIdx);
+  jumpToScrollOnlyIn(MID_PAGES,[d.pre+d.new,d.new,d.pre+d.old,d.old,d.pre].filter(Boolean),aIdx);
+});
+async function enterCompare(){
+  document.getElementById("app").style.display="none";const cv=document.getElementById("compareView");cv.style.display="flex";document.getElementById("syncScroll").checked=true;
+  showLoader(true,"加载对比…");
+  try{
+    const dr=await fetch("/api/diff");DIFF=await dr.json();
+    const lf=await fetch("/api/pdf?mode=markup_original");const lb=await lf.arrayBuffer();
+    const mf=await fetch("/api/pdf?mode=markup_final");const mb=await mf.arrayBuffer();
+    LEFT_BUF=lb;MID_BUF=mb;document.getElementById("cmpZoom").value=String(ZOOM);const L=document.getElementById("cmpLeft"),M=document.getElementById("cmpMid");L.innerHTML="";M.innerHTML="";LEFT_PAGES=[];MID_PAGES=[];
+    await renderPdfInto(lb,L,LEFT_PAGES);await renderPdfInto(mb,M,MID_PAGES);
+    renderDiff();
+    document.getElementById("cmpMeta").textContent="新增 "+DIFF.adds.length+" · 删除 "+DIFF.dels.length+" · 修改 "+DIFF.mods.length;
+  }catch(e){console.error(e);showToast("对比加载失败");}finally{showLoader(false);}
+}
+document.getElementById("zoomSel").addEventListener("change",e=>{ZOOM=parseFloat(e.target.value);renderMain();});
+document.getElementById("cmpZoom").addEventListener("change",async e=>{ZOOM=parseFloat(e.target.value);if(LEFT_BUF){const L=document.getElementById("cmpLeft"),M=document.getElementById("cmpMid");L.innerHTML="";M.innerHTML="";LEFT_PAGES=[];MID_PAGES=[];await renderPdfInto(LEFT_BUF,L,LEFT_PAGES);await renderPdfInto(MID_BUF,M,MID_PAGES);}});
+(function(){const L=document.getElementById("cmpLeft"),M=document.getElementById("cmpMid"),sync=document.getElementById("syncScroll");let lock=false;
+  function syncf(src,dst){if(!sync.checked||lock)return;lock=true;dst.scrollTop=src.scrollTop;lock=false;}
+  L.addEventListener("scroll",()=>syncf(L,M));M.addEventListener("scroll",()=>syncf(M,L));})();
+</script></body>
+</html>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "制度一致性审核"
+  short_description: "检测同级制度、总部与分公司制度间的冲突点，覆盖术语定义、处罚标准、审批流程等8个维度"
+  default_prompt: "使用 $policy-consistency-audit 对提供的 DOCX 制度文件执行一致性审核，识别跨制度冲突并输出冲突清单与修改建议。"

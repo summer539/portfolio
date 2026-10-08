@@ -1,0 +1,24 @@
+[
+  {
+    "name": "法规名称（全称）",
+    "url": "https://官方权威源/全文页",
+    "org": "发布机关",
+    "publish_date": "YYYY-MM-DD",
+    "effective_date": "YYYY-MM-DD",
+    "preamble": "题注/审议批准信息（可空）",
+    "doc_no": "文号（可空）",
+    "level": "党内法规",
+    "status": "现行有效"
+  },
+  {
+    "name": "XXX条例",
+    "url": "https://www.12371.cn/2023/12/27/ARTI1703688691926144.shtml",
+    "org": "中共中央",
+    "publish_date": "2023-12-19",
+    "effective_date": "2024-01-01",
+    "preamble": "2023年12月8日中共中央政治局会议修订",
+    "doc_no": "",
+    "level": "党内法规",
+    "status": "现行有效"
+  }
+]
