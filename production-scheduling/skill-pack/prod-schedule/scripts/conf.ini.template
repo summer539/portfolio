@@ -1,0 +1,11 @@
+[config]
+# 江西某陶瓷企业 - 金蝶云星空
+# 复制此文件为 conf.ini 并填写实际参数
+X-KDApi-AcctID = <账套ID>
+X-KDApi-AppID = <应用ID>
+X-KDApi-AppSec = <应用密钥>
+X-KDApi-UserName = <用户名>
+X-KDApi-LCID = 2052
+X-KDApi-ServerUrl = https://<ERP 主机>/k3cloud/
+X-KDApi-ConnectTimeout = 120
+X-KDApi-RequestTimeout = 120
