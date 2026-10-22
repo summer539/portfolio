@@ -152,7 +152,8 @@
   }
   .chain{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
   .chip{
-    display:inline-flex;align-items:center;
+    display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;
+    gap:1px;
     background:var(--panel-2);
     border:1px solid var(--line);
     border-radius:9px;
@@ -209,13 +210,16 @@
     border:1px solid var(--line);border-radius:9px;padding:7px 10px;
     font-size:12.5px;background:var(--panel-2);
   }
-  .state em{font-style:normal;font-size:14px;line-height:1}
+  .state em{font-style:normal;font-size:14px;line-height:1;font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif}
   .state span{color:var(--muted);font-size:11.5px;margin-left:auto;text-align:right}
   .decision-chain{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
   .decision-chain b{
     font-weight:500;font-size:12px;color:var(--teal);
     background:var(--teal-soft);border-radius:6px;padding:4px 8px;
   }
+  .layers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .layers b{display:block;font-size:12.5px;font-weight:600;color:var(--teal);margin-bottom:2px}
+  .layers span{font-size:11.5px;color:var(--muted);line-height:1.55;display:block}
 
   /* params */
   .params{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -259,6 +263,7 @@
     .split{grid-template-columns:1fr}
     .params{grid-template-columns:1fr 1fr}
     .states{grid-template-columns:1fr}
+    .layers{grid-template-columns:1fr}
     .stage{padding:16px}
   }
   @media print{
@@ -432,7 +437,7 @@
             <h3>人工确认与闭环</h3>
             <p class="sub">AI 给建议，排产业务员拍板；上线后用实绩回检参数</p>
           </div>
-          <span class="kind">HUMAN IN THE LOOP</span>
+          <span class="kind">人工确认</span>
         </div>
         <div class="chain">
           <span class="chip">业务员复核调整</span>
@@ -493,6 +498,11 @@ P = round(P / 500) × 500</pre>
           <b>回暖上涨 · 多备 1 天</b>
           <b>脉冲波动 · 屏蔽 7 天</b>
           <b>衰减 · 压至起排量</b>
+        </div>
+        <div class="layers">
+          <div><b>7 天</b><span>即时需求，决定缺口底线</span></div>
+          <div><b>30 天</b><span>中期均值，判断趋势真伪</span></div>
+          <div><b>90 天</b><span>长期基线，设 60 天安全阀</span></div>
         </div>
       </div>
     </div>
